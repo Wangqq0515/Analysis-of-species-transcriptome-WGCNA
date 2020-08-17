@@ -117,12 +117,124 @@ myheatcol = colorpanel(250,'red',"orange",'lemonchiffon')
 TOMplot(plotTOM, geneTree, moduleColors, main = "Network heatmap plot, all genes", col=myheatcol)
 ```
 
+保存你的结果：
+```console
+moduleLabels = net$colors
+moduleColors = labels2colors(net$colors)
+table(moduleColors) #查看所有模块里基因的数量
+moduleColors
+      black        blue       brown        cyan       green greenyellow        grey 
+        248         959         858          46         265         147          40 
+    magenta        pink      purple         red      salmon         tan   turquoise 
+        195         230         159         263          69          77        1014 
+     yellow 
+        430 
+MEs = net$MEs
+MEs_col = MEs
+library(stringr)
+colnames(MEs_col) = paste0("ME", labels2colors(as.numeric(str_replace_all(colnames(MEs),"ME",""))))
+MEs <- MEs_col
+geneTree = net$dendrograms[[1]]
+save(MEs, moduleLabels, moduleColors, geneTree, file = "RNA_seq_FPKM_filted_networkConstruction.RData")
+```
 
+想查看每一个模块里的基因吗？代码：
+```console
+unique(moduleColors)
+ [1] "blue"      "green"     "brown"     "grey"      "turquoise"
+ [6] "red"       "black"     "yellow"    "pink"      "magenta"  
+head(colnames(datExpr_filted)[moduleColors=="black"])
 
+#　如果不想看前几个，想调出来全部的，可以这样：
+brown_module <- colnames(datExpr_filted)[moduleColors=="brown"]
+write.table(data.frame(brown_module),file = "brown_module.txt")
+```
 
+选一个你感兴趣的模块，看看基因的表达情况
+```console
+# You could extract the FPKM of the genes in the intested module, make heatmap of gene expression
+which.module="black"
+plotMat(t(scale(datExpr_filted[,moduleColors==which.module ]) ),
+    nrgcols=30,
+    rlabels=F,
+    rcols=which.module,
+    main=which.module,
+    cex.main=2
+  )
+# You can also displaying module heatmap and the eigengene
+sizeGrWindow(8,7)
+which.module="black"
+ME=MEs[,paste("ME",which.module, sep="")]
+par(mfrow=c(2,1), mar=c(0.3, 5.5, 3, 2))
+plotMat(t(scale(datExpr_filted[,moduleColors==which.module ]) ),
+        nrgcols=30,rlabels=F,rcols=which.module,
+        main=which.module, cex.main=2)
+par(mar=c(5, 4.2, 0, 0.7))
+barplot(ME, 
+        col=which.module, 
+        main="", 
+        cex.main=2, 
+        ylab="eigengene expression",
+        xlab="samples")
+```
 
+模块之间的相关性
+```console
+MEs = net$MEs
+MEs_col = MEs
+library(stringr)
+colnames(MEs_col) = paste0("ME", labels2colors(as.numeric(str_replace_all(colnames(MEs),"ME",""))))
+MEs_col = orderMEs(MEs_col)
+MEs <- MEs_col
+# The correlation map of each module was obtained by clustering according to the gene expression
+plotEigengeneNetworks(MEs_col, "Eigengene adjacency heatmap", 
+                      marDendro = c(3,3,2,4),
+                      marHeatmap = c(3,4,2,2), plotDendrograms = T, 
+                      xLabelsAngle = 90)
+```
 
+模块与性状/实验条件/临床特征的相关性
+对于我来说，这一步是最关键的，我想知道我的实验处理条件和哪一个或哪几个模块最相关：
+#先处理一下样品属性的matrix，或者你有临床属性也可以
+```console
+datTraits <- as.data.frame(datTraits)
+design = model.matrix(~0+ datTraits$sample_time)
+c = as.factor(datTraits$sample_time)
+levels(c)
+colnames(design) = levels(c)
+moduleColors <- labels2colors(net$colors)
+MEs0 = moduleEigengenes(datExpr_filted, moduleColors)$eigengenes
+MEs = orderMEs(MEs0)
+moduleTraitCor = cor(MEs, design , use = "p")
+nSamples = nrow(datExpr_filted)
+moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples)
 
+textMatrix = paste(signif(moduleTraitCor, 2), "\n(",
+                   signif(moduleTraitPvalue, 1), ")", sep = "")
+dim(textMatrix) = dim(moduleTraitCor)
+# Display the correlation values within a heatmap plot (correlation between module and conditions)
+labeledHeatmap(Matrix = moduleTraitCor,
+               xLabels = colnames(design),
+               yLabels = names(MEs),
+               ySymbols = names(MEs),
+               colorLabels = FALSE,
+               colors = blueWhiteRed(50),
+               textMatrix = textMatrix,
+               setStdMargins = FALSE,
+               cex.text = 0.9,
+               zlim = c(-1,1),
+               main = paste("Module-trait relationships"))
+```
 
+你可以指定一个感兴趣的表型/condition，可以得到与这个形状相关性最高的模块：
+# You can get the most relevant module by specifying a condition of interest
+```console
+which.trait <- "S1h"
+moduleTraitCor[, which.trait]
+    MEblack      MEpink      MEblue    MEyellow     MEbrown MEturquoise 
+  0.6348693   0.6386766  -0.2192051   0.2993171   0.1302572  -0.2362041 
+  MEmagenta     MEgreen       MEred      MEgrey 
+ -0.1391687   0.0269631  -0.1231228   0.4544833 
+```
 
 
