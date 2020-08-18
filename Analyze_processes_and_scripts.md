@@ -98,7 +98,7 @@ geneTree = net$dendrograms[[1]]
 moduleColors = labels2colors(net$colors)
 dissTOM = 1 - TOMsimilarityFromExpr(
   datExpr_filted,
-  power = 14)
+  power = sft$powerEstimate)
 plotTOM = dissTOM ^ 7
 diag(plotTOM) = NA
 # The more genes you choose, the longer time this step will take:
