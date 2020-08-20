@@ -7,7 +7,7 @@ cot_goodSample_phone <- cot_pheno[goodSample,]
 datExpr <- cot_goodSample_FPKM
 ```
 
-#筛选方法：mad > 1 且top5000
+筛选方法：mad > 1 且top5000
 ```console
 WGCNA_matrix = t(datExpr[order(apply(datExpr,1,mad),decreasing = T)[1:5000],])
 datExpr_filted <- WGCNA_matrix
@@ -35,8 +35,8 @@ datExpr_filted <- datExpr_remove
 ```
 
 确定软阈值
-# Constructing a weighted gene network entails the choice of the soft thresholding power to which coexpression similarity is raised to calculate adjacency.
-# Set up a bunch of power gradients(设定一些列power梯度)
+Constructing a weighted gene network entails the choice of the soft thresholding power to which coexpression similarity is raised to calculate adjacency.
+Set up a bunch of power gradients(设定一些列power梯度)
 ```console
 powers = c(c(1:10), seq(from = 12, to=20, by=2))
 sft = pickSoftThreshold(datExpr_filted, powerVector = powers, verbose = 5) #this step will take some time # The "sft" object contains the network characteristics that calculated for each power value(在sft这个对象中保存了每个power值计算出来的值)
@@ -62,11 +62,11 @@ sft$powerEstimate
 ```
 
 网络构建
-# power: 上面得到的软阈值
-# maxBlockSize: 计算机能处理的最大模块的基因数量 (默认5000)（4G内存电脑可处理8000-10000个，16G内存电脑可以处理2万个，32G内存电脑可以处理3万个）
-# numericLabels: 返回数字而不是颜色作为模块的名字，后面可以再转换为颜色
-# saveTOMs：最耗费时间的计算，存储起来，供后续使用
-# mergeCutHeight: 合并模块的阈值，越大模块越少
+power: 上面得到的软阈值
+maxBlockSize: 计算机能处理的最大模块的基因数量 (默认5000)（4G内存电脑可处理8000-10000个，16G内存电脑可以处理2万个，32G内存电脑可以处理3万个）
+numericLabels: 返回数字而不是颜色作为模块的名字，后面可以再转换为颜色
+saveTOMs：最耗费时间的计算，存储起来，供后续使用
+mergeCutHeight: 合并模块的阈值，越大模块越少
 ```console
 net = blockwiseModules(datExpr_filted, power = sft$powerEstimate, maxBlockSize = 5000,
                        TOMType = "unsigned", minModuleSize = 30,
@@ -90,8 +90,8 @@ plotDendroAndColors(net$dendrograms[[1]], mergedColors[net$blockGenes[[1]]],"Mod
 
 可视化基因网络
 上面我们构建了网络，还可以将基因共表达相似度矩阵绘制成热图，和模块的聚类一起展示：
-# shown in a heat map according to 1-TOM value (distance between genes)
-# This step you could use 5000 genes to make heatmap figure, or you could use randomly some genes from each module
+shown in a heat map according to 1-TOM value (distance between genes)
+This step you could use 5000 genes to make heatmap figure, or you could use randomly some genes from each module
 ```console
 geneTree = net$dendrograms[[1]]
 moduleColors = labels2colors(net$colors)
@@ -226,7 +226,7 @@ labeledHeatmap(Matrix = moduleTraitCor,
 ```
 
 你可以指定一个感兴趣的表型/condition，可以得到与这个形状相关性最高的模块：
-# You can get the most relevant module by specifying a condition of interest
+You can get the most relevant module by specifying a condition of interest
 ```console
 which.trait <- "S1h"
 moduleTraitCor[, which.trait]
@@ -237,14 +237,14 @@ moduleTraitCor[, which.trait]
 ```
 
 对某一个性状/条件/临床特征相对应的某个模块进行具体分析
-# 对p/brown(条件/模块)具体分析,模块内基因与表型数据关联:
-# 性状跟模块虽然求出了相关性，可以挑选最相关的那些模块来分析
-# 但是模块本身仍然包含非常多的基因，还需进一步的寻找最重要的基因
-# 所有的模块都可以跟基因算出相关系数，所有的连续型性状也可以跟基因的表达值算出相关系数
-# 如果跟性状显著相关基因也跟某个模块显著相关，那么这些基因可能就非常重要
+对p/brown(条件/模块)具体分析,模块内基因与表型数据关联:
+性状跟模块虽然求出了相关性，可以挑选最相关的那些模块来分析
+但是模块本身仍然包含非常多的基因，还需进一步的寻找最重要的基因
+所有的模块都可以跟基因算出相关系数，所有的连续型性状也可以跟基因的表达值算出相关系数
+如果跟性状显著相关基因也跟某个模块显著相关，那么这些基因可能就非常重要
 
-# Firstly, calculate the correlation matrix between module and genes.(首先计算模块与基因的相关性矩)
-# names (colors) of the modules
+Firstly, calculate the correlation matrix between module and genes.(首先计算模块与基因的相关性矩)
+names (colors) of the modules
 ```console
 modNames = substring(names(MEs), 3)
 geneModuleMembership = as.data.frame(cor(datExpr_filted, MEs, use = "p"))
