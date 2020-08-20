@@ -1,5 +1,4 @@
-1. 首先整合各个数据的FPKM表达文件到一个文件里
-WGCNA代码：
+1. 首先整合各个数据的FPKM表达文件到一个文件里,得到行为基因名，列为样本的的数据框
 ```console
 goodSample <- c("FPKM.H10m.1","FPKM.H10m.2","FPKM.H10m.3","FPKM.H1h.1","FPKM.H1h.2","FPKM.H1h.3","FPKM.H30m.1","FPKM.H30m.2","FPKM.H30m.3","FPKM.H4h.1","FPKM.H4h.2","FPKM.H4h.3","FPKM.S10m.1","FPKM.S10m.2","FPKM.S10m.3","FPKM.S1h.1","FPKM.S1h.2","FPKM.S1h.3","FPKM.S30m.1","FPKM.S30m.2","FPKM.S30m.3","FPKM.S4h.1","FPKM.S4h.2","FPKM.S4h.3")
 cot_goodSample <- total_FPKM[,goodSample]
@@ -8,7 +7,7 @@ cot_goodSample_phone <- cot_pheno[goodSample,]
 datExpr <- cot_goodSample_FPKM
 ```
 
-# 筛选方法：mad>1且top5000
+#筛选方法：mad > 1 且top5000
 ```console
 WGCNA_matrix = t(datExpr[order(apply(datExpr,1,mad),decreasing = T)[1:5000],])
 datExpr_filted <- WGCNA_matrix
